@@ -1,100 +1,434 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <title>Steen Papier Schaar</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #f0f4ff, #cce0ff);
-            text-align: center;
-            padding: 50px;
-            margin: 0;
-        }
-
-        h1 {
-            font-size: 2.5em;
-            color: #333;
-            margin-bottom: 40px;
-        }
-
-        p {
-            font-size: 1.2em;
-            color: #555;
-            margin: 15px 0;
-        }
-
-        button {
-            font-size: 1.1em;
-            padding: 10px 20px;
-            margin: 10px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background-color: #007BFF;
-            color: white;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-            transform: scale(1.05);
-        }
-
-        span {
-            font-weight: bold;
-            color: #000;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Steen Papier Schaar - Arcade Power met Score en Geluid</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: 'Press Start 2P', cursive;
+      overflow: hidden;
+      background: radial-gradient(circle, #0f0c29, #302b63, #24243e);
+      color: #fff;
+      position: relative;
+    }
+    /* Side animations container */
+    .side-animations {
+      position: fixed;
+      top: 0; bottom: 0;
+      width: 100%;
+      pointer-events: none;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+    /* Neon bar columns */
+    .bar-column {
+      position: relative;
+      width: 120px;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      align-items: center;
+      gap: 15px;
+      padding: 10px 0;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, #000000bb 0%, transparent 100%);
+      filter: drop-shadow(0 0 8px #00ffc8);
+    }
+    /* Neon lines */
+    .neon-line {
+      width: 5px;
+      height: 50px;
+      background: linear-gradient(180deg, #00ffc8, #00a3a3);
+      border-radius: 3px;
+      box-shadow:
+        0 0 8px #00ffc8,
+        0 0 16px #00ffc8,
+        0 0 28px #00ffc8;
+      animation: pulseLine 2.5s infinite ease-in-out;
+      opacity: 0.7;
+      position: relative;
+    }
+    .neon-line:nth-child(odd) {
+      animation-delay: 0s;
+    }
+    .neon-line:nth-child(even) {
+      animation-delay: 1.2s;
+      opacity: 0.5;
+    }
+    /* Pulse animation */
+    @keyframes pulseLine {
+      0%, 100% { opacity: 0.7; box-shadow: 0 0 8px #00ffc8, 0 0 16px #00ffc8, 0 0 28px #00ffc8; transform: translateY(0); }
+      50% { opacity: 1; box-shadow: 0 0 20px #00ffc8, 0 0 32px #00ffc8, 0 0 50px #00ffc8; transform: translateY(-20px); }
+    }
+    /* Glow dots moving vertical */
+    .glow-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #00ffc8;
+      border-radius: 50%;
+      filter: drop-shadow(0 0 12px #00ffc8);
+      animation: glowMove 4s linear infinite;
+      opacity: 0.9;
+    }
+    .left .glow-dot {
+      left: 30px;
+      animation-name: glowMoveDown;
+    }
+    .right .glow-dot {
+      right: 30px;
+      animation-name: glowMoveUp;
+      animation-delay: 2s;
+    }
+    @keyframes glowMoveDown {
+      0% { top: 0; opacity: 0.1; }
+      50% { top: 85vh; opacity: 1; }
+      100% { top: 0; opacity: 0.1; }
+    }
+    @keyframes glowMoveUp {
+      0% { top: 85vh; opacity: 0.1; }
+      50% { top: 0; opacity: 1; }
+      100% { top: 85vh; opacity: 0.1; }
+    }
+    /* Pulsing expanding circles on sides */
+    .pulse-circle {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border: 2px solid #00ffc8;
+      border-radius: 50%;
+      opacity: 0.3;
+      animation: pulseExpand 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .left .pulse-circle {
+      left: 10px;
+      top: 30vh;
+      animation-delay: 0s;
+    }
+    .right .pulse-circle {
+      right: 10px;
+      top: 60vh;
+      animation-delay: 2s;
+    }
+    @keyframes pulseExpand {
+      0% { transform: scale(0.7); opacity: 0.3; }
+      50% { transform: scale(1.4); opacity: 0; }
+      100% { transform: scale(0.7); opacity: 0.3; }
+    }
+    /* Neon grid behind side bars */
+    .neon-grid {
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 0; right: 0;
+      background-image:
+        linear-gradient(to right, #00ffc8 1px, transparent 1px),
+        linear-gradient(to bottom, #00ffc8 1px, transparent 1px);
+      background-size: 30px 30px;
+      opacity: 0.05;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes gridMove {
+      0% { background-position: 0 0, 0 0; }
+      100% { background-position: 30px 30px, 30px 30px; }
+    }
+    /* Fast shooting neon bars */
+    .shooting-bar {
+      position: absolute;
+      width: 6px;
+      height: 60px;
+      background: linear-gradient(180deg, #00ffc8, #008a7f);
+      border-radius: 4px;
+      box-shadow: 0 0 15px #00ffc8, 0 0 25px #00ffc8;
+      opacity: 0.6;
+      animation-timing-function: linear;
+      pointer-events: none;
+    }
+    /* Left side shooting bars (fall down) */
+    .left .shooting-bar {
+      left: 40px;
+      animation-name: shootDown;
+    }
+    /* Right side shooting bars (rise up) */
+    .right .shooting-bar {
+      right: 40px;
+      animation-name: shootUp;
+    }
+    @keyframes shootDown {
+      0% { top: -60px; opacity: 0; }
+      10% { opacity: 1; }
+      100% { top: 110vh; opacity: 0; }
+    }
+    @keyframes shootUp {
+      0% { top: 110vh; opacity: 0; }
+      10% { opacity: 1; }
+      100% { top: -60px; opacity: 0; }
+    }
+    /* Main game container */
+    .container {
+      position: relative;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.85);
+      padding: 40px 50px;
+      border: 3px solid #00ffc8;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 0 30px #00ffc8, 0 0 80px rgba(0, 255, 200, 0.5);
+      max-width: 600px;
+      margin: auto;
+      user-select: none;
+    }
+    .container.shake {
+      animation: shake 0.5s;
+    }
+    @keyframes shake {
+      0% { transform: translate(1px, 1px); }
+      25% { transform: translate(-2px, 2px); }
+      50% { transform: translate(2px, -1px); }
+      75% { transform: translate(-1px, -2px); }
+      100% { transform: translate(1px, 1px); }
+    }
+    /* Glitch text effect on title */
+    h1 {
+      color: #00ffc8;
+      font-size: 2.4rem;
+      text-shadow:
+        2px 0 #00fff8,
+        -2px 0 #00d1a3,
+        0 2px #00fff8,
+        0 -2px #00d1a3;
+      position: relative;
+      animation: glitch 1.8s infinite;
+      margin-bottom: 1.5rem;
+    }
+    @keyframes glitch {
+      0% {
+        text-shadow:
+          2px 0 #00fff8,
+          -2px 0 #00d1a3,
+          0 2px #00fff8,
+          0 -2px #00d1a3;
+      }
+      20% {
+        text-shadow:
+          2px 0 #ff00c8,
+          -2px 0 #ff0073,
+          0 2px #ff00c8,
+          0 -2px #ff0073;
+        transform: translate(-2px, 0);
+      }
+      40% {
+        text-shadow:
+          2px 0 #00fff8,
+          -2px 0 #00d1a3,
+          0 2px #00fff8,
+          0 -2px #00d1a3;
+        transform: translate(2px, 0);
+      }
+      60% {
+        text-shadow:
+          2px 0 #ff00c8,
+          -2px 0 #ff0073,
+          0 2px #ff00c8,
+          0 -2px #ff0073;
+        transform: translate(-2px, 0);
+      }
+      80% {
+        text-shadow:
+          2px 0 #00fff8,
+          -2px 0 #00d1a3,
+          0 2px #00fff8,
+          0 -2px #00d1a3;
+        transform: translate(2px, 0);
+      }
+      100% {
+        text-shadow:
+          2px 0 #00fff8,
+          -2px 0 #00d1a3,
+          0 2px #00fff8,
+          0 -2px #00d1a3;
+        transform: translate(0);
+      }
+    }
+    p {
+      font-size: 1rem;
+      color: #a0f9e5;
+      margin: 0 0 25px 0;
+    }
+    /* Buttons style */
+    .btn {
+      background: linear-gradient(45deg, #00ffc8, #008a7f);
+      border: none;
+      padding: 12px 22px;
+      margin: 0 12px;
+      font-family: 'Press Start 2P', cursive;
+      font-size: 1rem;
+      color: #000;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow:
+        0 0 10px #00ffc8,
+        inset 0 0 8px #00ffc8;
+      transition: background 0.3s ease;
+      user-select: none;
+    }
+    .btn:hover {
+      background: linear-gradient(45deg, #00ffa0, #00b28a);
+      box-shadow:
+        0 0 25px #00ffa0,
+        inset 0 0 12px #00ffa0;
+    }
+    /* Scoreboard */
+    .scoreboard {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 25px;
+      font-size: 1.1rem;
+      letter-spacing: 0.02em;
+      font-weight: 700;
+    }
+    /* Result text */
+    .result {
+      margin: 20px 0 0 0;
+      font-size: 1.15rem;
+      min-height: 48px;
+      font-weight: 700;
+      /* Paars met neon glow */
+      color: #b37fff;
+      text-shadow:
+        0 0 8px #b37fff,
+        0 0 15px #9a66ff,
+        0 0 20px #7f52ff;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
+  <!-- Neon side bars with animations -->
+  <div class="side-animations">
+    <div class="bar-column left" aria-hidden="true">
+      <div class="pulse-circle"></div>
+      <div class="glow-dot" style="animation-delay: 0s;"></div>
+      <div class="glow-dot" style="top: 20vh; animation-delay: 1.3s;"></div>
+      <div class="glow-dot" style="top: 45vh; animation-delay: 2.6s;"></div>
+      <div class="glow-dot" style="top: 70vh; animation-delay: 4s;"></div>
+      <div class="neon-line"></div>
+      <div class="neon-line"></div>
+      <div class="neon-line"></div>
+      <div class="neon-line"></div>
+      <div class="neon-line"></div>
+      <div class="shooting-bar" style="animation-duration: 1.7s; animation-delay: 0s;"></div>
+      <div class="shooting-bar" style="animation-duration: 1.2s; animation-delay: 0.9s; top: 25vh;"></div>
+      <div class="shooting-bar" style="animation-duration: 1.5s; animation-delay: 1.5s; top: 45vh;"></div>
+    </div>
+    <div class="bar-column right" aria-hidden="true">
+      <div class="pulse-circle"></div>
+      <div class="glow-dot" style="animation-delay: 2s;"></div>
+      <div class="glow-dot" style="top: 20vh; animation-delay: 3.3s;"></div>
+      <div class="glow-dot" style="top: 45vh; animation-delay: 4.6s;"></div>
+      <div class="glow-dot" style="top: 70vh; animation-delay: 6s;"></div>
+      <div class="neon-line"></div>
+      <div class="neon-line"></div>
+      <div class="neon-line"></div>
+      <div class="neon-line"></div>
+      <div class="neon-line"></div>
+      <div class="shooting-bar" style="animation-duration: 1.4s; animation-delay: 0s;"></div>
+      <div class="shooting-bar" style="animation-duration: 1.7s; animation-delay: 0.8s; top: 25vh;"></div>
+      <div class="shooting-bar" style="animation-duration: 1.3s; animation-delay: 1.3s; top: 45vh;"></div>
+    </div>
+    <div class="neon-grid" aria-hidden="true"></div>
+  </div>
 
+  <main class="container" role="main" aria-label="Steen Papier Schaar Spel">
     <h1>Steen Papier Schaar</h1>
+    <p>Kies je zet en probeer te winnen van de computer!</p>
+    <div class="scoreboard" aria-live="polite" aria-atomic="true">
+      <div>Speler: <span id="playerScore">0</span></div>
+      <div>Computer: <span id="computerScore">0</span></div>
+    </div>
+    <div>
+      <button class="btn" id="steen" aria-label="Kies Steen">🪨 Steen</button>
+      <button class="btn" id="papier" aria-label="Kies Papier">📄 Papier</button>
+      <button class="btn" id="schaar" aria-label="Kies Schaar">✂️ Schaar</button>
+    </div>
+    <div class="result" role="status" aria-live="polite" id="result"></div>
+  </main>
 
-    <p>Computer kiest: <span id="computer"></span></p>
-    <p>Jouw keuze: <span id="human"></span></p>
-    <p>Uitkomst: <span id="result"></span></p>
+  <audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg" preload="auto"></audio>
+  <audio id="loseSound" src="https://actions.google.com/sounds/v1/cartoon/boing.ogg" preload="auto"></audio>
 
-    <button id="steen">Steen</button>
-    <button id="papier">Papier</button>
-    <button id="schaar">Schaar</button>
+  <script>
+    const playerScoreEl = document.getElementById('playerScore');
+    const computerScoreEl = document.getElementById('computerScore');
+    const resultEl = document.getElementById('result');
+    const container = document.querySelector('.container');
 
-    <script>
-        // Alle elementen selecteren
-        const computerSpan = document.querySelector("#computer");
-        const humanSpan = document.querySelector("#human");
-        const resultSpan = document.querySelector("#result");
+    const winSound = document.getElementById('winSound');
+    const loseSound = document.getElementById('loseSound');
 
-        // Beschikbare keuzes
-        const keuzes = ["steen", "papier", "schaar"];
+    let playerScore = 0;
+    let computerScore = 0;
 
-        // Functie die bepaalt wie wint
-        function bepaalWinnaar(humanChoice, computerChoice) {
-            if (humanChoice === computerChoice) {
-                return "Gelijkspel!";
-            } else if (
-                (humanChoice === "steen" && computerChoice === "schaar") ||
-                (humanChoice === "schaar" && computerChoice === "papier") ||
-                (humanChoice === "papier" && computerChoice === "steen")
-            ) {
-                return "Jij wint!";
-            } else {
-                return "Computer wint!";
-            }
-        }
+    function getComputerChoice() {
+      const choices = ['steen', 'papier', 'schaar'];
+      return choices[Math.floor(Math.random() * choices.length)];
+    }
 
-        // Functie die wordt uitgevoerd bij een klik
-        function speel(humanChoice) {
-            const computerChoice = keuzes[Math.floor(Math.random() * 3)];
-            humanSpan.textContent = humanChoice;
-            computerSpan.textContent = computerChoice;
-            resultSpan.textContent = bepaalWinnaar(humanChoice, computerChoice);
-        }
+    function playRound(playerSelection) {
+      const computerSelection = getComputerChoice();
 
-        // Event listeners toevoegen aan knoppen
-        document.getElementById("steen").addEventListener("click", () => speel("steen"));
-        document.getElementById("papier").addEventListener("click", () => speel("papier"));
-        document.getElementById("schaar").addEventListener("click", () => speel("schaar"));
-    </script>
+      if (playerSelection === computerSelection) {
+        showResult(`Gelijkspel! Beide kozen ${playerSelection}.`);
+        return;
+      }
+
+      const winConditions = {
+        steen: 'schaar',
+        papier: 'steen',
+        schaar: 'papier'
+      };
+
+      if (winConditions[playerSelection] === computerSelection) {
+        playerScore++;
+        updateScores();
+        showResult(`Gewonnen! ${capitalize(playerSelection)} verslaat ${computerSelection}.`);
+        winSound.currentTime = 0;
+        winSound.play();
+      } else {
+        computerScore++;
+        updateScores();
+        showResult(`Verloren! ${capitalize(computerSelection)} verslaat ${playerSelection}.`);
+        loseSound.currentTime = 0;
+        loseSound.play();
+        container.classList.add('shake');
+        setTimeout(() => container.classList.remove('shake'), 500);
+      }
+    }
+
+    function updateScores() {
+      playerScoreEl.textContent = playerScore;
+      computerScoreEl.textContent = computerScore;
+    }
+
+    function showResult(message) {
+      resultEl.textContent = message;
+    }
+
+    function capitalize(str) {
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+    document.getElementById('steen').addEventListener('click', () => playRound('steen'));
+    document.getElementById('papier').addEventListener('click', () => playRound('papier'));
+    document.getElementById('schaar').addEventListener('click', () => playRound('schaar'));
+  </script>
 </body>
 </html>
